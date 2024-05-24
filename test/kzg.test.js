@@ -173,7 +173,7 @@ describe("bn128", async function () {
     const pleft = bn128.pairing(cy, bn128.G2.g);
     const pright = bn128.pairing(pi, az);
 
-    console.log(bn128.F12.eq(pleft, pright), pleft.slice(0, 8), pright.slice(0, 8));
+    // console.log(bn128.F12.eq(pleft, pright), pleft.slice(0, 8), pright.slice(0, 8));
     assert(bn128.F12.eq(pleft, pright));
 
     const G1 = bn128.G1;
