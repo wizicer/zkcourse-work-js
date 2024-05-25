@@ -80,7 +80,7 @@ describe("standard fri", async function () {
     // console.log(arr.length);
 
     const xs = g_arr.slice(0, g_arr.length - 1);
-    // console.log(xs.length, xs.slice(0, 5));
+    console.log("xs: ", xs.length, xs.slice(0, 5));
     const points = xs.map((x, i) => [x, arr[i]]);
     // console.log(points.length, points.slice(0, 5));
 
@@ -91,11 +91,51 @@ describe("standard fri", async function () {
     const v = barycentricInterpolation(points, weights, 2, field);
 
     assert(BigInt(v) == 1302089273n);
+
+    const w = 5n; //generator
+    const exp = field.div(field.mul(pow(field, 2, 30), 3n), 8192n);
+    const h = pow(field, w, exp);
+    const h_array = Array(8192)
+      .fill(1n)
+      .map((_, i) => pow(field, h, i));
+    const eval_domain = h_array.map((x) => field.mul(w, x));
+    console.log("eval_domain", eval_domain.slice(0, 5));
+
+    let field_generator = w;
+    let w_inverse = field.inv(field_generator);
+
+    for (let i = 0; i < 8192; i++) {
+      // assert_eq!((w_inverse * eval_domain[1]).pow(i) * field_generator, eval_domain[i]);
+      assert(field.mul(pow(field, field.mul(w_inverse, eval_domain[1]), BigInt(i)), field_generator) == eval_domain[i]);
+    }
+
+    // const G_values = [];
+    // for (let i = 0n; i < 1024n; i++) {
+    //   G_values.push(pow(field, g, i));
+    // }
+
+    // const x_values = G_values.slice(0, G_values.length - 1);
+    // const g_points = x_values.map((x, i) => [x, arr[i]]);
+    const g_points = points;
+
+    // const weights = barycentricWeights(g_points, field);
+    // const v = barycentricInterpolation(points, weights, 2, field);
+    const interpolated_f_eval = [];
+    for (let i = 0; i < eval_domain.length; i++) {
+      if (i % 100 == 0) console.log(`evaluate ${i}/${eval_domain.length}`);
+      const d = eval_domain[i];
+      interpolated_f_eval.push(barycentricInterpolation(g_points, weights, d, field));
+      // if (i == 100) {
+      //   console.log(interpolated_f_eval.slice(0, 5));
+      //   return;
+      // }
+    }
   });
 });
 
 function pow(field, base, n) {
-  let current_pow = base;
+  n = BigInt(n);
+  let current_pow = BigInt(base);
   let res = 1n;
   while (n > 0n) {
     if (n % 2n !== 0n) {
