@@ -29,10 +29,19 @@ describe("polynomial", async function () {
     let d = p.eval(10);
     assert(p.toString() == "0.75x+0.25");
     assert(d == 7.75);
+
+    Polynomial.setFiniteField(3n * 2n ** 30n + 1n);
+    let pf = Polynomial.interpolate([
+      [1, 1],
+      [5, 4],
+    ]);
+    let df = pf.eval(10);
+    assert(pf.toString() == "805306369x+2415919105");
+    assert(df == 805306376n);
   });
 });
 
-describe("galois", async function () {
+describe("standard fri", async function () {
   this.timeout(0);
 
   it("fri test", async () => {
@@ -52,23 +61,36 @@ describe("galois", async function () {
     // console.log(g);
 
     const g_arr = [];
-    for (let i = 0; i < 1023; i++) {
-      g_arr.push(field.exp(g, arr[i]));
+    for (let i = 0; i < 1024; i++) {
+      g_arr.push(pow(field, g, BigInt(i)));
     }
+    // console.log(g_arr.slice(0, 5));
 
-    let b = g;
+    assert(isOrder(field, g, 1024), "g is not of order 1024");
+    let b = field.one;
     for (let i = 0; i < 1023; i++) {
-      if (!b == g_arr[i]) {
-        throw new Error(`The ${i}-th place in G is not equal to the ${i}-th power of g.`);
-      }
+      assert(b == g_arr[i], `The ${i}-th place in G is not equal to the ${i}-th power of g.`);
+
       b = field.mul(b, g);
       let wrongOrder = i + 1;
-      if (b == g) {
-        throw new Error(`g is of order ${wrongOrder}`);
-      }
+      assert(b != field.one, `g is of order ${wrongOrder}`);
     }
 
-    assert(field.mul(b, g) == g, "g is of order > 1024");
+    assert(field.mul(b, g) == field.one, "g is of order > 1024");
+    // console.log(arr.length);
+
+    const xs = g_arr.slice(0, g_arr.length - 1);
+    // console.log(xs.length, xs.slice(0, 5));
+    const points = xs.map((x, i) => [x, arr[i]]);
+    // console.log(points.length, points.slice(0, 5));
+
+    // const f = interpolate(field, points);
+    // const v = f(2);
+
+    const weights = barycentricWeights(points, field);
+    const v = barycentricInterpolation(points, weights, 2, field);
+
+    assert(BigInt(v) == 1302089273n);
   });
 });
 
@@ -84,4 +106,83 @@ function pow(field, base, n) {
   }
 
   return res;
+}
+
+function isOrder(field, g, n) {
+  if (n < 1) {
+    throw new Error("n must be greater than or equal to 1");
+  }
+  let h = field.one;
+  for (let i = 1; i < n; i++) {
+    h = field.mul(h, g);
+    if (h == field.one) {
+      return false;
+    }
+  }
+  h = field.mul(h, g);
+  return h == field.one;
+}
+
+// https://github.com/feklee/interpolating-polynomial/blob/master/node_main.js
+// Neville's algorithm
+// too slow, feasible for small number of points (<10)
+function interpolate(field, points) {
+  let n = points.length - 1,
+    p;
+
+  p = function (i, j, x) {
+    console.log(i, j, x);
+    if (i === j) {
+      return points[i][1];
+    }
+
+    // return ((points[j][0] - x) * p(i, j - 1, x) +
+    //         (x - points[i][0]) * p(i + 1, j, x)) /
+    //     (points[j][0] - points[i][0]);
+    const xb = BigInt(x);
+    const xj = BigInt(points[j][0]);
+    const xi = BigInt(points[i][0]);
+
+    const numerator1 = field.mul(field.sub(xj, xb), p(i, j - 1, x));
+    const numerator2 = field.mul(field.sub(xb, xi), p(i + 1, j, x));
+    const denominator = field.sub(xj, xi);
+
+    return field.div(field.add(numerator1, numerator2), denominator);
+  };
+
+  return function (x) {
+    if (points.length === 0) {
+      return 0;
+    }
+    return p(0, n, x);
+  };
+}
+
+function barycentricWeights(points, field) {
+  const n = points.length;
+  const w = Array(n)
+    .fill(1n)
+    .map(() => BigInt(1));
+  for (let j = 0; j < n; j++) {
+    for (let k = 0; k < n; k++) {
+      if (j !== k) {
+        w[j] = field.div(w[j], field.sub(BigInt(points[j][0]), BigInt(points[k][0])));
+      }
+    }
+  }
+  return w;
+}
+
+function barycentricInterpolation(points, weights, x, field) {
+  const n = points.length;
+  let numerator = 0n;
+  let denominator = 0n;
+
+  for (let j = 0; j < n; j++) {
+    const term = field.div(weights[j], field.sub(BigInt(x), BigInt(points[j][0])));
+    numerator = field.add(numerator, field.mul(term, BigInt(points[j][1])));
+    denominator = field.add(denominator, term);
+  }
+
+  return field.div(numerator, denominator);
 }

@@ -42,47 +42,7 @@ describe("bn128", async function () {
     bn128 = await buildBn128();
     // console.log(bn128.Fr.toString(bn128.Fr.w[28]));
     // console.log(bn128.r);
-    let r = bn128.r;
-    Polynomial.setField({
-      add: function (a, b) {
-        return (BigInt(a) + BigInt(b)) % r;
-      },
-      sub: function (a, b) {
-        return (BigInt(a) - BigInt(b)) % r;
-      },
-      mul: function (a, b) {
-        return (BigInt(a) * BigInt(b)) % r;
-      },
-      div: function (a, b) {
-        return (BigInt(a) / BigInt(b)) % r;
-      },
-      parse: function (x) {
-        return BigInt(x);
-      },
-      empty: function (x) {
-        return !x || BigInt(x) == 0n;
-      },
-      pow: function (a, b) {
-        let result = 1;
-        let x = BigInt(a) % r;
-        let d = BigInt(b);
-
-        while (d > 0) {
-          var leastSignificantBit = d % 2;
-          d = d / 2;
-
-          if (leastSignificantBit == 1) {
-            result = (result * x) % r;
-          }
-
-          x = (x * x) % r;
-        }
-        return result;
-      },
-      abs: function (a) {
-        return Math.abs(BigInt(a));
-      },
-    });
+    Polynomial.setFiniteField(bn128.r);
   });
   after(async () => {
     bn128.terminate();
