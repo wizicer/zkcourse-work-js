@@ -6,6 +6,7 @@
     "chai": "^5.1.1",
     "elliptic": "^6.5.5",
     "ffjavascript": "^0.3.0",
+    "merkletreejs": "^0.3.11",
     "mocha": "^10.4.0",
     "nodemon": "^3.1.0",
     "polynomial": "^1.4.5"

@@ -6,6 +6,8 @@ import Polynomial from "../lib/polynomial/polynomial.js";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import EC from "elliptic";
 import BN from "bn.js";
+import { MerkleTree } from "merkletreejs";
+import  SHA256  from "crypto-js/sha256.js";
 
 let log2 = utils.log2;
 BigInt.prototype.toJSON = function () {
@@ -122,7 +124,7 @@ describe("standard fri", async function () {
     // const v = barycentricInterpolation(points, weights, 2, field);
     const interpolated_f_eval = [];
     for (let i = 0; i < eval_domain.length; i++) {
-      if (i % 100 == 0) console.log(`evaluate ${i}/${eval_domain.length}`);
+      if (i % 512 == 0) console.log(`evaluate ${i}/${eval_domain.length}`);
       const d = eval_domain[i];
       interpolated_f_eval.push(barycentricInterpolation(g_points, weights, d, field));
       // if (i == 100) {
@@ -130,6 +132,11 @@ describe("standard fri", async function () {
       //   return;
       // }
     }
+
+    const tree = new MerkleTree(interpolated_f_eval, SHA256);
+    const root = tree.getRoot().toString("hex");
+    // console.log(root);
+    assert(root == "d1bf99e9e7854a486206d366274fb979ed2a92b6cd22977564280858f03a77cd")
   });
 });
 
