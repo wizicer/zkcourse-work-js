@@ -18,6 +18,19 @@ function assertBytes(expect, actual) {
     assert(expect[i] == actual[i]);
   }
 }
+describe("polynomial", async function () {
+  this.timeout(0);
+
+  it("interpolation test", async () => {
+    let p = Polynomial.interpolate([
+      [1, 1],
+      [5, 4],
+    ]);
+    let d = p.eval(10);
+    assert(p.toString() == "0.75x+0.25");
+    assert(d == 7.75);
+  });
+});
 
 describe("galois", async function () {
   this.timeout(0);
@@ -55,12 +68,7 @@ describe("galois", async function () {
       }
     }
 
-    if (field.mul(b, g) == g) {
-      console.log("Success!");
-    } else {
-      console.log("g is of order > 1024");
-    }
-
+    assert(field.mul(b, g) == g, "g is of order > 1024");
   });
 });
 
