@@ -29,6 +29,7 @@ describe("polynomial", async function () {
       [5, 4],
     ]);
     let d = p.eval(10);
+    console.log(p.toString());
     assert(p.toString() == "0.75x+0.25");
     assert(d == 7.75);
 
@@ -86,13 +87,15 @@ describe("standard fri", async function () {
     const points = xs.map((x, i) => [x, arr[i]]);
     // console.log(points.length, points.slice(0, 5));
 
-    // const f = interpolate(field, points);
-    // const v = f(2);
+    return;
+    const f = interpolate(field, points);
+    const v = f(2);
 
-    const weights = barycentricWeights(points, field);
-    const v = barycentricInterpolation(points, weights, 2, field);
+    // const weights = barycentricWeights(points, field);
+    // const v = barycentricInterpolation(points, weights, 2, field);
 
     assert(BigInt(v) == 1302089273n);
+    return;
 
     const w = 5n; //generator
     const exp = field.div(field.mul(pow(field, 2, 30), 3n), 8192n);
@@ -137,6 +140,10 @@ describe("standard fri", async function () {
     const root = tree.getRoot().toString("hex");
     // console.log(root);
     assert(root == "d1bf99e9e7854a486206d366274fb979ed2a92b6cd22977564280858f03a77cd")
+
+
+    // =========================== Part 2 ===========================
+    const numer0 = f
   });
 });
 
