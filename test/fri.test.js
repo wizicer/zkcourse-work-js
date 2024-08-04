@@ -7,7 +7,7 @@ import { secp256k1 } from "@noble/curves/secp256k1";
 import EC from "elliptic";
 import BN from "bn.js";
 import { MerkleTree } from "merkletreejs";
-import  SHA256  from "crypto-js/sha256.js";
+import SHA256 from "crypto-js/sha256.js";
 
 let log2 = utils.log2;
 BigInt.prototype.toJSON = function () {
@@ -29,9 +29,8 @@ describe("polynomial", async function () {
       [5, 4],
     ]);
     let d = p.eval(10);
-    console.log(p.toString());
-    assert(p.toString() == "0.75x+0.25");
-    assert(d == 7.75);
+    assert.equal(p.toString(), "0.75x+0.25");
+    assert.equal(d, 7.75);
 
     Polynomial.setFiniteField(3n * 2n ** 30n + 1n);
     let pf = Polynomial.interpolate([
@@ -39,8 +38,18 @@ describe("polynomial", async function () {
       [5, 4],
     ]);
     let df = pf.eval(10);
-    assert(pf.toString() == "805306369x+2415919105");
-    assert(df == 805306376n);
+    assert.equal(pf.toString(), "805306369x+2415919105");
+    assert.equal(df, 805306376n);
+
+    Polynomial.setFiniteField(3n * 2n ** 30n + 1n);
+    let pf2 = Polynomial.interpolate([
+      [1, 1],
+      [3, 2],
+      [8, 3],
+    ]);
+    let df2 = pf2.eval(10);
+    assert.equal(pf2.toString(), "1886717777x^2+506192575x+828315122");
+    assert.equal(df2, 1288490192n);
   });
 });
 
@@ -69,6 +78,7 @@ describe("standard fri", async function () {
     }
     // console.log(g_arr.slice(0, 5));
 
+    // Checks that g and G are correct.
     assert(isOrder(field, g, 1024), "g is not of order 1024");
     let b = field.one;
     for (let i = 0; i < 1023; i++) {
@@ -79,7 +89,7 @@ describe("standard fri", async function () {
       assert(b != field.one, `g is of order ${wrongOrder}`);
     }
 
-    assert(field.mul(b, g) == field.one, "g is of order > 1024");
+    assert.equal(field.mul(b, g), field.one, "g is of order > 1024");
     // console.log(arr.length);
 
     const xs = g_arr.slice(0, g_arr.length - 1);
@@ -87,14 +97,15 @@ describe("standard fri", async function () {
     const points = xs.map((x, i) => [x, arr[i]]);
     // console.log(points.length, points.slice(0, 5));
 
-    return;
-    const f = interpolate(field, points);
-    const v = f(2);
+    // return;
+    // const f = interpolate(field, points);
+    let f = Polynomial.interpolate(points);
+    const v = f.eval(2);
 
     // const weights = barycentricWeights(points, field);
     // const v = barycentricInterpolation(points, weights, 2, field);
 
-    assert(BigInt(v) == 1302089273n);
+    assert.equal(BigInt(v), 1302089273n);
     return;
 
     const w = 5n; //generator
@@ -139,11 +150,10 @@ describe("standard fri", async function () {
     const tree = new MerkleTree(interpolated_f_eval, SHA256);
     const root = tree.getRoot().toString("hex");
     // console.log(root);
-    assert(root == "d1bf99e9e7854a486206d366274fb979ed2a92b6cd22977564280858f03a77cd")
-
+    assert(root == "d1bf99e9e7854a486206d366274fb979ed2a92b6cd22977564280858f03a77cd");
 
     // =========================== Part 2 ===========================
-    const numer0 = f
+    const numer0 = f;
   });
 });
 
