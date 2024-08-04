@@ -39,18 +39,14 @@ describe("bn128", async function () {
 
   let bn128;
   before(async () => {
-    bn128 = await buildBn128();
-    // console.log(bn128.Fr.toString(bn128.Fr.w[28]));
-    // console.log(bn128.r);
-    Polynomial.setFiniteField(bn128.r);
   });
   after(async () => {
-    bn128.terminate();
   });
 
   it("polynomial", async () => {
     // Polynomial.setField(("Z" + bn128.r.toString()));
     // Polynomial.setField(("Z11"));
+    Polynomial.setField("R");
     let p = new Polynomial("3x^2").add("-x^2");
     // console.log(p.toString());
     let p1 = new Polynomial([40, 44, -16, 111, 32, -21]);
@@ -58,10 +54,16 @@ describe("bn128", async function () {
     let p2 = new Polynomial([8, -4, 8, 7]);
     // console.log("p2",p2)
     let p3 = p1.div(p2);
-    assert("-3x^2+8x+5" == p3.toString());
+    // console.log("p3",p3.toString())
+    assert.equal("-3x^2+8x+5" , p3.toString());
   });
 
   it("kzg", async () => {
+    bn128 = await buildBn128();
+    // console.log(bn128.Fr.toString(bn128.Fr.w[28]));
+    // console.log(bn128.r);
+    Polynomial.setFiniteField(bn128.r);
+
     const Fr = bn128.Fr;
     // const field = galois.createPrimeField(Fr);
     // 0. prepare
@@ -108,7 +110,7 @@ describe("bn128", async function () {
     const y2 = f.reduce((pv, fi) => [Fr.add(Fr.mul(fi, pv[1]), pv[0]), Fr.mul(pv[1], z)], [Fr.zero, Fr.one])[0];
     // console.log("eval fpoly", fPoly, Fr.toString(z, 10))
     const y = fPoly.eval(Fr.toString(z, 10));
-    assert(y.toString() == Fr.toString(y2, 10));
+    assert.equal(y.toString() ,Fr.toString(y2, 10));
     // console.log(y,Fr.toString(y2,10));
     // const q =
 
@@ -155,6 +157,8 @@ describe("bn128", async function () {
     const accG2 = await G1.multiExpAffine(bases, scalars); //, logger, "test");
 
     assert(G1.eq(accG, accG2));
+
+    bn128.terminate();
   });
 
   //   it("group property", async () => {
