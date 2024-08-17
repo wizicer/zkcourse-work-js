@@ -57,6 +57,7 @@ describe("standard fri", async function () {
   this.timeout(0);
 
   it("fri test", async () => {
+    Polynomial.setFiniteField(3n * 2n ** 30n + 1n);
     const field = galois.createPrimeField(3n * 2n ** 30n + 1n);
 
     const c = field.add(3221225472n, 10n);
